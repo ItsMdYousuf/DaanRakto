@@ -60,9 +60,6 @@ const Header = () => {
           href="/"
           className="flex items-center gap-2 transition-transform hover:scale-105"
         >
-          {/* <div className="scale-75 md:scale-100">
-            <LogoAnimation />
-          </div> */}
           <span className="hidden text-xl font-bold tracking-tight text-red-600 lg:block">
             LIFEBLOOD
           </span>
