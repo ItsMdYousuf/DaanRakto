@@ -1,210 +1,172 @@
 "use client";
-import LogoAnimation from "@/app/logo/page";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Droplets, Menu, Moon, Sun, UserCircle, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const Header = () => {
   const pathname = usePathname();
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
-  const dropdownRef = useRef(null);
   const { setTheme, resolvedTheme } = useTheme();
 
-  const handleScroll = () => {
-    if (window.scrollY > lastScrollY) {
-      setIsVisible(false); // Scroll down
-    } else {
-      setIsVisible(true); // Scroll up
-    }
-    setLastScrollY(window.scrollY);
-  };
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
-  const handleDropdownToggle = () => {
-    setIsDropdownVisible((prev) => !prev); // Toggle the mobile menu
-  };
-
-  const handleClickOutside = (e) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-      setIsDropdownVisible(false);
-    }
-  };
-
+  // Handle Navbar visibility and background blur on scroll
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    document.addEventListener("mousedown", handleClickOutside);
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
+      // Change background opacity after 20px
+      setScrolled(currentScrollY > 20);
+
+      // Hide/Show on scroll logic
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
     };
-  }, [handleScroll]);
 
-  const handleTheme = () => {
-    setTheme(resolvedTheme === "dark" ? "light" : "dark");
-  };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+  const navLinks = [
+    { name: "Home", href: "/" },
+    { name: "Find Donors", href: "/donors" },
+    { name: "Blood Requests", href: "/blood-request" },
+    { name: "Campaigns", href: "/campaigns" },
+    { name: "Blog", href: "/blog" },
+  ];
 
   return (
     <header
-      className={`fixed top-0 z-50 w-full border-b-2 bg-white/50 px-1 backdrop-blur-2xl transition-transform duration-300 md:px-5 lg:px-20 ${
+      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
         !isVisible ? "-translate-y-full" : "translate-y-0"
+      } ${
+        scrolled
+          ? "border-b bg-white/80 shadow-sm backdrop-blur-md dark:bg-slate-950/80"
+          : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto flex h-16 items-center justify-between">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
+        {/* Logo Section */}
         <Link
-          rel="noopener noreferrer"
-          href={"/"}
-          aria-label="Back to homepage"
-          className="flex items-center p-2 text-2xl font-semibold"
+          href="/"
+          className="flex items-center gap-2 transition-transform hover:scale-105"
         >
-          <div className="mt-6">
+          {/* <div className="scale-75 md:scale-100">
             <LogoAnimation />
-          </div>
+          </div> */}
+          <span className="hidden text-xl font-bold tracking-tight text-red-600 lg:block">
+            LIFEBLOOD
+          </span>
         </Link>
 
-        {/* Desktop Menu */}
-        <ul className="hidden items-center space-x-3 md:flex">
-          <li>
+        {/* Desktop Navigation */}
+        <nav className="hidden items-center gap-1 md:flex">
+          {navLinks.map((link) => (
             <Link
-              rel="noopener noreferrer"
-              href={"/"}
-              className={`px-4 ${pathname === "/" ? "text-red-600" : ""}`}
-            >
-              Home
-            </Link>
-          </li>
-
-          <li>
-            <Link
-              rel="noopener noreferrer"
-              href={"/blood-request"}
-              className={`px-4 ${
-                pathname === "/blood-request" ? "text-red-600" : ""
+              key={link.href}
+              href={link.href}
+              className={`relative px-3 py-2 text-sm font-medium transition-colors hover:text-red-500 ${
+                pathname === link.href
+                  ? "text-red-600"
+                  : "text-slate-600 dark:text-slate-300"
               }`}
             >
-              Blood Request
+              {link.name}
+              {pathname === link.href && (
+                <span className="absolute bottom-0 left-0 h-0.5 w-full bg-red-600" />
+              )}
             </Link>
-          </li>
-          <li>
-            <Link
-              rel="noopener noreferrer"
-              href={"/blog"}
-              className={`px-4 ${pathname === "/blog" ? "text-red-600" : ""}`}
-            >
-              Blog
-            </Link>
-          </li>
-          <li>
-            <Link
-              rel="noopener noreferrer"
-              href={"/policy"}
-              className={`px-4 ${pathname === "/police" ? "text-red-600" : ""}`}
-            >
-              Policy
-            </Link>
-          </li>
-          <Button variant="outline" size="icon" onClick={handleTheme}>
-            {resolvedTheme === "dark" ? (
-              <Sun className="h-[1.2rem] w-[1.2rem]" />
-            ) : (
-              <Moon className="h-[1.2rem] w-[1.2rem]" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        </ul>
+          ))}
+        </nav>
 
-        {/* Mobile Hamburger Menu */}
-        <button
-          className="p-4 md:hidden"
-          onClick={handleDropdownToggle}
-          aria-label="Toggle mobile menu"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            className="h-6 w-6"
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* Theme Toggle */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
+            className="rounded-full"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            ></path>
-          </svg>
-        </button>
+            {resolvedTheme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </Button>
+
+          {/* User Auth (Useful for real app) */}
+          <Link href="/login" className="hidden sm:block">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <UserCircle className="h-5 w-5" />
+              Login
+            </Button>
+          </Link>
+
+          {/* Urgent CTA Button */}
+          <Link href="/donate-now">
+            <Button className="animate-pulse bg-red-600 font-bold text-white shadow-lg shadow-red-500/20 hover:bg-red-700">
+              <Droplets className="mr-2 h-4 w-4" />
+              Donate Now
+            </Button>
+          </Link>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="ml-2 rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
-      {isDropdownVisible && (
-        <div
-          ref={dropdownRef}
-          className="absolute left-0 top-16 w-full bg-white/60 backdrop-blur-2xl md:hidden"
-        >
-          <ul className="flex flex-col space-y-2 p-4 font-semibold">
-            <li>
-              <Link
-                rel="noopener noreferrer"
-                href={"/"}
-                className={`block px-4 py-2 ${
-                  pathname === "/" ? "text-red-600" : ""
-                }`}
-                onClick={() => setIsDropdownVisible(false)}
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                rel="noopener noreferrer"
-                href={"/blood-request"}
-                className={`block px-4 py-2 ${
-                  pathname === "/blood-request" ? "text-red-600" : ""
-                }`}
-                onClick={() => setIsDropdownVisible(false)}
-              >
-                Blood Request
-              </Link>
-            </li>
-            <li>
-              <Link
-                rel="noopener noreferrer"
-                href={"/blog"}
-                className={`block px-4 py-2 ${
-                  pathname === "/blog" ? "text-red-600" : ""
-                }`}
-                onClick={() => setIsDropdownVisible(false)}
-              >
-                Blog
-              </Link>
-            </li>
-            <li>
-              <Link
-                rel="noopener noreferrer"
-                href={"/police"}
-                className={`block px-4 py-2 ${
-                  pathname === "/police" ? "text-red-600" : ""
-                }`}
-                onClick={() => setIsDropdownVisible(false)}
-              >
-                Police
-              </Link>
-            </li>
-            <Button variant="outline" size="icon" onClick={handleTheme}>
-              {resolvedTheme === "dark" ? (
-                <Sun className="h-[1.2rem] w-[1.2rem]" />
-              ) : (
-                <Moon className="h-[1.2rem] w-[1.2rem]" />
-              )}
-            </Button>
-          </ul>
+      {/* Mobile Side Drawer / Menu */}
+      <div
+        className={`fixed inset-0 top-16 z-40 h-screen w-full bg-white transition-transform duration-300 dark:bg-slate-950 md:hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col space-y-4 p-6">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`text-xl font-semibold ${
+                pathname === link.href
+                  ? "text-red-600"
+                  : "text-slate-700 dark:text-slate-200"
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
+          <hr className="border-slate-200 dark:border-slate-800" />
+          <Link
+            href="/login"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-2 text-xl font-semibold"
+          >
+            <UserCircle className="h-6 w-6" /> Profile
+          </Link>
         </div>
-      )}
+      </div>
     </header>
   );
 };
