@@ -1,6 +1,6 @@
 {
-  "name": "DaanRakto",
-  "version": "1.0.0",
+  "name": "Blood Donation App BD",
+  "version": "2.1.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
